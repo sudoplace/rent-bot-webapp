@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Фильтры — Krisha Bot</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Официальный SDK Telegram Mini App. Один внешний script с CDN telegram.org.
+       Никаких npm-пакетов. -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+
+  <main class="app">
+    <header class="header">
+      <h1>Фильтры поиска</h1>
+      <p class="hint">Алматы · Аренда квартир · только с фото</p>
+    </header>
+
+    <!-- 1. РАЙОНЫ ----------------------------------------------------- -->
+    <section class="section">
+      <div class="section-head">
+        <h2>Районы</h2>
+        <button type="button" class="info-toggle" id="distInfoToggle"
+                aria-expanded="false" aria-controls="distInfo">
+          Как выбирать?
+        </button>
+      </div>
+      <p class="section-hint">Можно выбрать несколько. Если ничего не выбрано — ищем по всему городу.</p>
+
+      <!-- Подсказка по районам. Скрыта по умолчанию, разворачивается тапом. -->
+      <div class="info-panel" id="distInfo" hidden>
+        <p class="info-legend">
+          💸 — относительная цена аренды (чем больше значков, тем дороже).
+          Описание помечено <span class="src-tag src-aviasales">A</span> для районов
+          из статьи aviasales, <span class="src-tag src-general">·</span> — общее знание.
+        </p>
+        <div class="info-cards" id="distInfoCards">
+          <!-- карточки рендерятся в app.js -->
+        </div>
+      </div>
+
+      <div class="chips" id="districts">
+        <!-- чекбоксы рендерятся из app.js по списку DISTRICTS -->
+      </div>
+    </section>
+
+    <!-- 2. КОМНАТЫ ----------------------------------------------------- -->
+    <section class="section">
+      <h2>Комнаты</h2>
+      <div class="chips" id="rooms">
+        <!-- чипы 1/2/3/4/5+ рендерятся из app.js -->
+      </div>
+    </section>
+
+    <!-- 3. ЦЕНА ------------------------------------------------------- -->
+    <section class="section">
+      <h2>Цена за месяц, ₸</h2>
+      <div class="row">
+        <label class="field">
+          <span>от</span>
+          <input type="number" inputmode="numeric" min="0" step="10000"
+                 id="priceFrom" placeholder="—">
+        </label>
+        <label class="field">
+          <span>до</span>
+          <input type="number" inputmode="numeric" min="0" step="10000"
+                 id="priceTo" placeholder="—">
+        </label>
+      </div>
+    </section>
+
+    <!-- 4. ОТ КОГО ---------------------------------------------------- -->
+    <section class="section">
+      <h2>От кого</h2>
+      <div class="radios" id="who">
+        <label><input type="radio" name="who" value="any"   checked> Все</label>
+        <label><input type="radio" name="who" value="owner">         Только хозяева</label>
+        <label><input type="radio" name="who" value="agent">         Только агенты</label>
+      </div>
+    </section>
+
+    <!-- Тех. блок — отображается только вне Telegram (для локальной отладки) -->
+    <section class="section debug" id="debug" hidden>
+      <h2>Debug</h2>
+      <button type="button" id="dumpBtn">Показать JSON</button>
+      <pre id="dump"></pre>
+    </section>
+  </main>
+
+  <!-- Нижняя кнопка «Сохранить» внутри Telegram управляется через
+       Telegram.WebApp.MainButton — этот HTML-кнопка показывается только
+       при запуске вне Telegram (например, в обычном браузере). -->
+  <button type="button" class="save-fallback" id="saveBtn" hidden>Сохранить</button>
+
+  <script src="app.js"></script>
+</body>
+</html>

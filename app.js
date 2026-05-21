@@ -217,15 +217,54 @@ function validate(state) {
 
 function send(state) {
   const payload = JSON.stringify(state);
-  if (isInTelegram) {
-    tg.sendData(payload);   // бот получит это в апдейте web_app_data
-    tg.close();
-  } else {
+
+  if (!isInTelegram) {
     // dev-режим: показываем JSON и копируем в буфер
-    const dump = document.getElementById("dump");
-    dump.textContent = payload;
+    document.getElementById("dump").textContent = payload;
     navigator.clipboard?.writeText(payload).catch(() => {});
+    return;
   }
+
+  // В Telegram: sendData() мгновенно закрывает Mini App. Чтобы пользователь
+  // успел увидеть отклик (спиннер на кнопке + вибро), закрываем не сразу,
+  // а когда выполнены ОБА условия:
+  //   1) фильтры записаны в CloudStorage (для префилла при след. открытии);
+  //   2) прошла минимальная пауза MIN_DELAY_MS.
+  // Плюс жёсткая страховка на случай зависания CloudStorage.
+  const MIN_DELAY_MS = 600;
+  const HARD_TIMEOUT_MS = 2500;
+
+  let dispatched = false;
+  const dispatch = () => {
+    if (dispatched) return;
+    dispatched = true;
+    tg.sendData(payload);            // долетит боту как web_app_data
+  };
+
+  let writeReady = false;
+  let delayReady = false;
+  const maybeDispatch = () => {
+    if (writeReady && delayReady) dispatch();
+  };
+
+  // (1) запись в облако
+  const cs = tg.CloudStorage;
+  const markWritten = () => { writeReady = true; maybeDispatch(); };
+  if (cs && typeof cs.setItem === "function") {
+    try {
+      cs.setItem("filters", payload, markWritten);  // зовётся и при ошибке
+    } catch (e) {
+      markWritten();
+    }
+  } else {
+    markWritten();                   // старый клиент без CloudStorage
+  }
+
+  // (2) минимальная пауза для видимости спиннера/вибро
+  setTimeout(() => { delayReady = true; maybeDispatch(); }, MIN_DELAY_MS);
+
+  // страховка: закрыть в любом случае, даже если CloudStorage завис
+  setTimeout(dispatch, HARD_TIMEOUT_MS);
 }
 
 /* === Реактивность MainButton ===================================== */
@@ -264,7 +303,16 @@ if (isInTelegram) {
   // Используем нативную нижнюю кнопку Telegram
   tg.MainButton.onClick(() => {
     const state = collect();
-    if (validate(state).length === 0) send(state);
+    if (validate(state).length !== 0) return;
+
+    // визуальный + тактильный отклик перед закрытием Mini App
+    const mb = tg.MainButton;
+    mb.setText("Сохраняем…");
+    mb.showProgress();               // нативный спиннер на кнопке
+    mb.disable();
+    tg.HapticFeedback?.notificationOccurred?.("success");
+
+    send(state);
   });
 } else {
   // Вне Telegram — показываем debug-блок и резервную кнопку
@@ -284,11 +332,56 @@ if (isInTelegram) {
 // первичное состояние кнопки
 onChange();
 
-/* === Предзаполнение из start_param / cloudStorage ================
-   На следующем шаге, когда подключим бота:
-   - можно передавать сохранённые фильтры через tg.initDataUnsafe.start_param
-     или через Telegram Cloud Storage (tg.CloudStorage), и заполнять форму
-     ими при открытии. Сейчас оставлено как hook на будущее.
+/* === Префилл формы сохранёнными фильтрами =========================
+   Источник — Telegram CloudStorage (ключ "filters"), куда мы пишем
+   при каждом сохранении в send(). Backend для этого не нужен.
 ================================================================== */
-function prefill(/* state */) { /* TODO на этапе бота */ }
+
+function setChip(containerId, value, checked) {
+  const input = document.querySelector(
+    `#${containerId} input[value="${value}"]`
+  );
+  if (!input) return;
+  input.checked = checked;
+  input.closest(".chip")?.classList.toggle("checked", checked);
+}
+
+function applyState(state) {
+  if (!state || typeof state !== "object") return;
+
+  for (const alias of Array.isArray(state.districts) ? state.districts : []) {
+    setChip("districts", alias, true);
+  }
+  for (const room of Array.isArray(state.rooms) ? state.rooms : []) {
+    setChip("rooms", room, true);
+  }
+  if (state.price && typeof state.price === "object") {
+    if (state.price.from != null) {
+      document.getElementById("priceFrom").value = state.price.from;
+    }
+    if (state.price.to != null) {
+      document.getElementById("priceTo").value = state.price.to;
+    }
+  }
+  if (state.who) {
+    const radio = document.querySelector(`#who input[value="${state.who}"]`);
+    if (radio) radio.checked = true;
+  }
+  onChange();
+}
+
+function prefill() {
+  const cs = tg && tg.CloudStorage;
+  if (!isInTelegram || !cs || typeof cs.getItem !== "function") return;
+
+  cs.getItem("filters", (err, value) => {
+    if (err || !value) return;
+    try {
+      applyState(JSON.parse(value));
+    } catch (e) {
+      // битый JSON в облаке — игнорируем, форма останется пустой
+    }
+  });
+}
+
 prefill();

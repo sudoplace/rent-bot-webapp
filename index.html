@@ -73,10 +73,20 @@
     <!-- 4. ОТ КОГО ---------------------------------------------------- -->
     <section class="section">
       <h2>От кого</h2>
-      <div class="radios" id="who">
-        <label><input type="radio" name="who" value="any"   checked> Все</label>
-        <label><input type="radio" name="who" value="owner">         Только хозяева</label>
-        <label><input type="radio" name="who" value="agent">         Только агенты</label>
+      <p class="section-hint">
+        Ничего не выбрано — показываем и хозяев, и агентов.
+      </p>
+      <div class="who-buttons" id="who">
+        <button type="button" class="who-btn" data-who="owner" aria-pressed="false">
+          <span class="who-btn-label">Только хозяева</span>
+          <!-- IMG-слот: позже добавить src, напр. src="img/owner.png" -->
+          <img class="who-btn-img" alt="">
+        </button>
+        <button type="button" class="who-btn" data-who="agent" aria-pressed="false">
+          <span class="who-btn-label">Только агенты</span>
+          <!-- IMG-слот: позже добавить src, напр. src="img/agent.png" -->
+          <img class="who-btn-img" alt="">
+        </button>
       </div>
     </section>
 

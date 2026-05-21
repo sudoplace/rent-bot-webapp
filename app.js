@@ -181,8 +181,10 @@ function readNumber(id) {
 }
 
 function readWho() {
-  const r = document.querySelector('#who input[name="who"]:checked');
-  return r ? r.value : "any";
+  // две взаимоисключающие кнопки. Ничего не нажато → "any" (и хозяева,
+  // и агенты).
+  const pressed = document.querySelector('.who-btn[aria-pressed="true"]');
+  return pressed ? pressed.dataset.who : "any";
 }
 
 function collect() {
@@ -293,11 +295,21 @@ function onChange() {
 
 /* === Бутстрап =================================================== */
 
-// слушатели на инпуты цены/радио
+// слушатели на инпуты цены
 ["priceFrom", "priceTo"].forEach(id =>
   document.getElementById(id).addEventListener("input", onChange));
-document.querySelectorAll('#who input').forEach(i =>
-  i.addEventListener("change", onChange));
+
+// «От кого» — две взаимоисключающие кнопки-тоггла.
+// Повторный тап по активной кнопке снимает выбор → "any".
+document.querySelectorAll(".who-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const wasPressed = btn.getAttribute("aria-pressed") === "true";
+    document.querySelectorAll(".who-btn").forEach(b =>
+      b.setAttribute("aria-pressed", "false"));
+    if (!wasPressed) btn.setAttribute("aria-pressed", "true");
+    onChange();
+  });
+});
 
 if (isInTelegram) {
   // Используем нативную нижнюю кнопку Telegram
@@ -363,10 +375,9 @@ function applyState(state) {
       document.getElementById("priceTo").value = state.price.to;
     }
   }
-  if (state.who) {
-    const radio = document.querySelector(`#who input[value="${state.who}"]`);
-    if (radio) radio.checked = true;
-  }
+  // who: "owner" / "agent" / "any" (для "any" обе кнопки не нажаты)
+  document.querySelectorAll(".who-btn").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.who === state.who)));
   onChange();
 }
 

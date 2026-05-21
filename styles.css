@@ -14,7 +14,8 @@
   --tg-theme-button-text-color: #ffffff;
   --tg-theme-secondary-bg-color:#f1f1f1;
 
-  --radius: 10px;
+  --radius: 20px;       /* скругление блоков-секций (iOS-карточки) */
+  --radius-btn: 14px;   /* скругление кнопок — заметно меньше блоков */
   --gap: 12px;
 }
 
@@ -53,11 +54,9 @@ html, body {
 }
 .section h2 {
   margin: 0 0 8px;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--tg-theme-hint-color);
+  color: var(--tg-theme-text-color);
 }
 .section-hint {
   margin: 0 0 10px;
@@ -165,7 +164,7 @@ html, body {
   display: inline-flex;
   align-items: center;
   padding: 8px 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-btn);
   background: var(--tg-theme-bg-color);
   border: 1px solid transparent;
   cursor: pointer;
@@ -214,22 +213,44 @@ html, body {
   border-color: var(--tg-theme-button-color);
 }
 
-/* радио-группа «От кого» */
-.radios {
+/* секция «От кого» — две кнопки-карточки в ряд */
+.who-buttons {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
-.radios label {
+.who-btn {
+  flex: 1;
+  min-width: 0;                       /* чтобы flex корректно ужимался */
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  cursor: pointer;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-btn);
   background: var(--tg-theme-bg-color);
+  color: var(--tg-theme-text-color);
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color .15s, background .15s;
 }
-.radios input { accent-color: var(--tg-theme-button-color); }
+.who-btn[aria-pressed="true"] {
+  border-color: var(--tg-theme-button-color);
+}
+.who-btn-label {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.who-btn-img {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  object-fit: contain;
+  /* src добавляется позже; пустой <img> места не ломает за счёт w/h */
+}
 
 /* debug-секция и fallback-кнопка (видны только вне Telegram) */
 .debug pre {

@@ -95,7 +95,20 @@ const ROOMS = [
 /* === Telegram WebApp init ========================================== */
 
 const tg = window.Telegram?.WebApp;
-const isInTelegram = !!(tg && tg.initData);
+
+// Признак запуска как настоящего Telegram Mini App.
+// НЕ опираемся на initData: для web_app-кнопок reply-клавиатуры Telegram
+// может не передавать initData вовсе — она нужна лишь тем, кто валидирует
+// запуск на своём бэкенде. Нам нужен sendData(), а он работает БЕЗ
+// initData (бот опознаёт пользователя по служебному web_app_data).
+// Надёжный признак реального запуска Mini App — платформа != "unknown"
+// (в обычном браузере telegram-web-app.js ставит "unknown").
+const isInTelegram = !!(
+  tg && (
+    (tg.initData && tg.initData.length > 0) ||
+    (tg.platform && tg.platform !== "unknown")
+  )
+);
 
 if (tg) {
   tg.ready();

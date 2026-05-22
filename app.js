@@ -327,7 +327,9 @@ if (isInTelegram) {
     send(state);
   });
 } else {
-  // Вне Telegram — показываем debug-блок и резервную кнопку
+  // initData пустой → это НЕ настоящий запуск Mini App: либо обычный
+  // браузер, либо ссылка во встроенном браузере Telegram. sendData()
+  // в этом режиме недоступен — показываем dev-блок с диагностикой.
   document.getElementById("debug").hidden = false;
   const saveBtn = document.getElementById("saveBtn");
   saveBtn.hidden = false;
@@ -339,6 +341,19 @@ if (isInTelegram) {
     document.getElementById("dump").textContent =
       JSON.stringify(collect(), null, 2);
   });
+
+  // диагностика — почему режим Mini App не активен
+  const diag = {
+    "window.Telegram есть": !!window.Telegram,
+    "WebApp есть": !!tg,
+    "platform": tg ? tg.platform : "—",
+    "version": tg ? tg.version : "—",
+    "initData длина": tg ? (tg.initData || "").length : "—",
+  };
+  document.getElementById("dump").textContent =
+    "Режим Mini App НЕ активен — sendData недоступен.\n" +
+    "Открой приложение кнопкой бота «Открыть фильтры», а не по ссылке.\n\n" +
+    "Диагностика:\n" + JSON.stringify(diag, null, 2);
 }
 
 // первичное состояние кнопки

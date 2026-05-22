@@ -342,17 +342,33 @@ if (isInTelegram) {
       JSON.stringify(collect(), null, 2);
   });
 
-  // диагностика — почему режим Mini App не активен
+  // диагностика — почему режим Mini App не активен.
+  // Главное: разбор location.hash — Telegram передаёт данные запуска
+  // именно там. Если tgWebAppData отсутствует/пустой — Telegram его
+  // не прислал (значит запуск не как keyboard-button web app).
+  const hashRaw = (location.hash || "").replace(/^#/, "");
+  const hashParams = hashRaw
+    ? hashRaw.split("&").map((p) => {
+        const i = p.indexOf("=");
+        const name = i >= 0 ? p.slice(0, i) : p;
+        const len = i >= 0 ? p.length - i - 1 : 0;
+        return `${name}(len ${len})`;
+      }).join(", ")
+    : "(хэш пустой)";
+
+  const idu = tg && tg.initDataUnsafe ? Object.keys(tg.initDataUnsafe) : [];
+
   const diag = {
-    "window.Telegram есть": !!window.Telegram,
-    "WebApp есть": !!tg,
+    "window.Telegram": !!window.Telegram,
+    "WebApp": !!tg,
     "platform": tg ? tg.platform : "—",
     "version": tg ? tg.version : "—",
     "initData длина": tg ? (tg.initData || "").length : "—",
+    "initDataUnsafe ключи": idu.length ? idu.join(",") : "(нет)",
+    "location.hash": hashParams,
   };
   document.getElementById("dump").textContent =
-    "Режим Mini App НЕ активен — sendData недоступен.\n" +
-    "Открой приложение кнопкой бота «Открыть фильтры», а не по ссылке.\n\n" +
+    "Режим Mini App НЕ активен — sendData недоступен.\n\n" +
     "Диагностика:\n" + JSON.stringify(diag, null, 2);
 }
 

@@ -221,18 +221,18 @@ html, body {
 .who-btn {
   flex: 1;
   min-width: 0;                       /* чтобы flex корректно ужимался */
+  position: relative;                 /* для абсолютной картинки справа */
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  min-height: 64px;
-  padding: 12px 14px;
+  min-height: 72px;
+  padding: 12px 80px 12px 14px;       /* правый отступ под картинку */
   border: 2px solid transparent;
   border-radius: var(--radius-btn);
   background: var(--tg-theme-bg-color);
   color: var(--tg-theme-text-color);
   cursor: pointer;
   text-align: left;
+  overflow: hidden;                   /* картинка не вылезает за скругление */
   -webkit-tap-highlight-color: transparent;
   transition: border-color .15s, background .15s;
 }
@@ -245,11 +245,15 @@ html, body {
   line-height: 1.25;
 }
 .who-btn-img {
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  height: 100%;                       /* полная высота кнопки */
+  width: auto;                        /* пропорции сохраняются */
   object-fit: contain;
-  /* src добавляется позже; пустой <img> места не ломает за счёт w/h */
+  object-position: right bottom;      /* прижато к правому-нижнему углу */
+  pointer-events: none;               /* клик идёт по кнопке, не по картинке */
 }
 
 /* debug-секция и fallback-кнопка (видны только вне Telegram) */
